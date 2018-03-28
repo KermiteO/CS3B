@@ -33,7 +33,7 @@
            13, 10, 13, 10,0							;formatting
 
 	numChars 	  word  0  ;numChars
-	index		  word  0
+	index		  word  0  ;index
 	firstInputNum dword ?  ;first input number
 	secInputNum	  dword ?  ;second input number
 	sumNum		  dword ?  ;the sum
@@ -41,8 +41,6 @@
 	productNum	  dword ?  ;the product num
 	quotientNum	  dword ?  ;the quotient
 	remainder  	  dword ?  ;the remainder	
-	
-	overflowFlag  word 0
 	
 	;outputting message as a string	
 	firstNumPromp   byte 10,13, "Enter your first number:  ",0   ;first number prompt
@@ -61,8 +59,6 @@
 	finalProduct  byte 10 dup(?)  ;final product
 	finalQuotient byte 10 dup(?)  ;final quotient
 	finalRem	  byte 10 dup(?)  ;final remainder
-	dummy byte 10 dup(?)
-	dummy2 byte 10 dup(?)
 	
 	newLine  DB 0Ah,0									  ;new line in hex					
 
@@ -110,19 +106,19 @@
 		mov firstInputNum, eax			  ;move eax into variable
 		
 		mov esi, OFFSET firstInput			   ;initialize index
-		mov ecx, LENGTHOF firstInput		   	   ;set end of loop condition
-		mov ax, 0
-		mov index, ax
+		mov ecx, LENGTHOF firstInput		   ;set end of loop condition
+		mov ax, 0							   ;move 0 into ax
+		mov index, ax						   ;move ax into index
 		
-		ClearFirstNum:
-			mov bx, numChars
-			cmp bx, index
-			je printSecPrompt
-			mov al, 0h
-			mov [esi], al
-			add esi, TYPE firstInput
-			inc index
-			jmp ClearFirstNum
+		ClearFirstNum: ;clearfirstnumber
+			mov bx, numChars			;move numChars to bx
+			cmp bx, index				;check if bx equals index num
+			je printSecPrompt			;jump to second input prompt if equal
+			mov al, 0h					;move 0 into al
+			mov [esi], al				;move null into current element
+			add esi, TYPE firstInput	;increment esi
+			inc index					;increment index
+			jmp ClearFirstNum			;loop
 	
 	printSecPrompt: 						   ;printsecondprompt
 		INVOKE putstring, ADDR secondNumPrompt ;print first Number prompt
@@ -160,18 +156,18 @@
 		InitializeForLoop:
 			mov esi, OFFSET secInput			   ;initialize index
 			mov ecx, LENGTHOF secInput		   	   ;set end of loop condition
-			mov ax, 0
-			mov index, ax
+			mov ax, 0							   ;move 0 into ax
+			mov index, ax						   ;move ax into index
 		
-		ClearSecNum:
-			mov bx, numChars
-			cmp bx, index
-			je addition
-			mov al, 0h
-			mov [esi], al
-			add esi, TYPE secInput
-			inc index
-			jmp ClearSecNum
+		ClearSecNum:				;clearsecnum
+			mov bx, numChars		;move numChars into bx
+			cmp bx, index			;check if bx is equal to index
+			je addition				;jump to addition block if equal
+			mov al, 0h				;move null into al
+			mov [esi], al			;move al into current element
+			add esi, TYPE secInput  ;increment esi
+			inc index				;increment index
+			jmp ClearSecNum			;loop
 		
 		
 	displayInvalidMsg:											;displayInvalidMsg
@@ -211,31 +207,31 @@
 		
 		mov esi, OFFSET secInput			   ;initialize index
 		mov ecx, LENGTHOF secInput		   	   ;set end of loop condition
-		mov ax, 0
-		mov index, ax
+		mov ax, 0							   ;move 0 into ax
+		mov index, ax						   ;move ax into index
 		
-		ClearandReenterNum:
-			mov bx, numChars
-			cmp bx, index
-			je printSecPrompt
-			mov al, 0h
-			mov [esi], al
-			add esi, TYPE secInput
-			inc index
-			jmp ClearandReenterNum
+		ClearandReenterNum:			;clearandreenternum
+			mov bx, numChars		;move numChars into bx
+			cmp bx, index			;check if index is the same as numChars
+			je printSecPrompt		;jump back to enter new second number
+			mov al, 0h				;move null into al
+			mov [esi], al			;move al into current element
+			add esi, TYPE secInput  ;increment esi
+			inc index				;increment index
+			jmp ClearandReenterNum  ;loop
 		
-	displayOvflAdd:
-		INVOKE putstring, ADDR strOverflowAdd
-		jmp difference
+	displayOvflAdd:								;displayOvflAdd
+		INVOKE putstring, ADDR strOverflowAdd   ;output error message
+		jmp difference							;jump to difference block
 		
-	displayOvflMul:
-		INVOKE putstring, ADDR strOverflowMul
-		jmp quotient
+	displayOvflMul:								;displayOvflMul
+		INVOKE putstring, ADDR strOverflowMul	;output error message	
+		jmp quotient							;jump to quotient block
 		
-	displayInvalidQuot:
-		INVOKE putstring, ADDR strOverflowDiv
-		INVOKE putstring, ADDR newLine
-		jmp printFirstPrompt
+	displayInvalidQuot:							;displayInvalidQuot
+		INVOKE putstring, ADDR strOverflowDiv	;output error message
+		INVOKE putstring, ADDR newLine			;output newline
+		jmp printFirstPrompt					;jump back to enter new first num
 		
 	maxChars2:				;maxChars
 		INVOKE putch, 08h	;print a backspace
@@ -261,48 +257,48 @@
 		jmp getSecondInput	;jump back to getFirstInput
 		
 	addition: ;addition
-		mov eax, firstInputNum
-		add eax, secInputNum
-		jo displayOvflAdd
-		mov sumNum, eax
-		INVOKE intasc32,  ADDR finalSum, sumNum
-		INVOKE putstring, ADDR sumMessage		
-		INVOKE putstring, ADDR finalSum
+		mov eax, firstInputNum					 ;move firstInputNum to eax
+		add eax, secInputNum					 ;sum firstInputNum with secInputNum
+		jo displayOvflAdd						 ;display error message if overflow
+		mov sumNum, eax							 ;move eax into sumNum
+		INVOKE intasc32,  ADDR finalSum, sumNum  ;convert int to ascii
+		INVOKE putstring, ADDR sumMessage		 ;print output
+		INVOKE putstring, ADDR finalSum			 ;print sum
 		
 	difference: ;difference
-		mov eax, firstInputNum
-		sub eax, secInputNum
-		mov differenceNum, eax
-		INVOKE putstring, ADDR diffMessage
-		INVOKE intasc32,  ADDR finalDiff, differenceNum
-		INVOKE putstring, ADDR finalDiff
+		mov eax, firstInputNum							;move firstInputNum into eax
+		sub eax, secInputNum							;subtract second num from first
+		mov differenceNum, eax							;move result into variable
+		INVOKE putstring, ADDR diffMessage				;print output
+		INVOKE intasc32,  ADDR finalDiff, differenceNum ;convert int to string
+		INVOKE putstring, ADDR finalDiff				;print difference
 		
-	product:
-		mov eax, firstInputNum
-		imul secInputNum
-		jo displayOvflMul
-		mov productNum, eax
-		INVOKE putstring, ADDR productMessage
-		INVOKE intasc32,  ADDR finalProduct, productNum
-		INVOKE putstring, ADDR finalProduct
+	product:											;product
+		mov eax, firstInputNum							;move firstInputNum to eax
+		imul secInputNum								;multiply with second num
+		jo displayOvflMul								;if overflow display message
+		mov productNum, eax								;store result in variable
+		INVOKE putstring, ADDR productMessage			;print output
+		INVOKE intasc32,  ADDR finalProduct, productNum ;convert int to string
+		INVOKE putstring, ADDR finalProduct				;print product
 		
-	quotient:
-		mov eax, firstInputNum
-		cdq
-		mov ecx, secInputNum
-		cmp ecx, 0
-		je displayInvalidQuot
-		idiv secInputNum
-		mov quotientNum, eax
-		mov remainder, edx
-		INVOKE intasc32, ADDR finalQuotient, quotientNum
-		INVOKE intasc32, ADDR finalRem, remainder
-		INVOKE putstring, ADDR quotientMessage
-		INVOKE putstring, ADDR finalQuotient
-		INVOKE putstring, ADDR remMessage
-		INVOKE putstring, ADDR finalRem
-		INVOKE putstring, ADDR newLine
-		jmp printFirstPrompt
+	quotient:												;quotient
+		mov eax, firstInputNum								;move firstInputNum into eax
+		cdq													;extend dword to qword
+		mov ecx, secInputNum								;move secInputNum to ecx
+		cmp ecx, 0											;check if second Num is a 0
+		je displayInvalidQuot								;if 0 then don't calc quotient
+		idiv secInputNum									;divide second num by first
+		mov quotientNum, eax								;move quotient into varible
+		mov remainder, edx									;move edx to remainder
+		INVOKE intasc32, ADDR finalQuotient, quotientNum	;convert int to string
+		INVOKE intasc32, ADDR finalRem, remainder			;convert int to string
+		INVOKE putstring, ADDR quotientMessage				;print output
+		INVOKE putstring, ADDR finalQuotient				;print quotient
+		INVOKE putstring, ADDR remMessage					;print remainder output
+		INVOKE putstring, ADDR finalRem						;print remainder
+		INVOKE putstring, ADDR newLine						;print newline
+		jmp printFirstPrompt								;loop back to firstprompt
 		
 	endProgram: ;endProgram
 		
